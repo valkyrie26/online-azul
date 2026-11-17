@@ -1,0 +1,14 @@
+{
+  "name": "online-azul",
+  "version": "1.0.0",
+  "description": "Azul board game in the browser: WebGL table, procedural tile sets, and computer opponents.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "test": "node --test tests/",
+    "simulate": "node scripts/simulate.js",
+    "check:browser": "node scripts/browser-check.js \"http://localhost:5173/?play=1&auto=99&fast=25&seed=11\" --until \"window.azul?.app?.state?.phase === 'gameOver'\" --timeout 240 --out browser-check.png"
+  },
+  "license": "MIT"
+}

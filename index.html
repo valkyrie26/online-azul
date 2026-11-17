@@ -2,169 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Azul Project Portfolio</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f7f7f7;
-      color: #333;
-    }
-
-    header {
-  background: #0c4a6e;
-  color: white;
-  padding: 2rem;
-  text-align: center;
-}
-
-.header-content {
-  display: inline-block;
-}
-
-.play-button {
-  background: #1e90ff;
-  color: white;
-  padding: 0.75rem 1.25rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  margin: 1rem 0 0.3rem;
-}
-
-.play-button:hover {
-  background: #0b78d1;
-}
-
-.contact-info {
-  font-size: 0.9rem;
-  opacity: 0.85;
-}
-
-
-    .contact-info {
-      font-size: 0.9rem;
-      margin-top: 0.3rem;
-      opacity: 0.85;
-    }
-
-    .play-button {
-      background: #1e90ff;
-      color: white;
-      padding: 0.75rem 1.25rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 0.5rem;
-    }
-
-    .play-button:hover {
-      background: #0b78d1;
-    }
-
-    section {
-      padding: 2rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    section h2 {
-      color: #0c4a6e;
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 0.5rem;
-    }
-
-    .image-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .image-gallery img {
-      width: 100%;
-      max-width: 300px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .top-right {
-        text-align: left;
-        margin-top: 1rem;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Azul · play online</title>
+  <meta name="description" content="Play the tile-laying board game Azul in your browser against computer opponents. WebGL table, procedural tile sets, three difficulty levels.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%231d4f9c'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'>A</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
       }
     }
-  </style>
+  </script>
 </head>
 <body>
+  <div id="scene"></div>
+  <div id="popups"></div>
+  <div id="loading">Laying out the tiles…</div>
 
-  <header>
-  <div class="header-content">
-    <h1>Azul: A Digital Board Game</h1>
-    <a href="azul.html">
-      <button class="play-button">Let's play Azul</button>
-    </a>
-    <div class="contact-info">
-      <strong>Pankhuri Shukla</strong><br>
-      ps4708@rit.edu
+  <!-- ===================== Title screen ===================== -->
+  <section id="title" hidden>
+    <div class="title-card">
+      <h1>AZUL</h1>
+      <p class="tagline">Decorate the walls of the Royal Palace of Évora, one tile at a time.</p>
+
+      <div class="field">
+        <label for="player-name">Your name</label>
+        <input id="player-name" type="text" maxlength="16" placeholder="Artisan">
+      </div>
+
+      <div class="field">
+        <label for="opponents">Opponents <output id="opponent-count">1</output></label>
+        <input id="opponents" type="range" min="1" max="3" step="1" value="1">
+      </div>
+
+      <div class="field">
+        <span class="label">Difficulty</span>
+        <div id="diff-cards" class="cards"></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Tile set</span>
+        <div id="set-cards" class="cards"></div>
+      </div>
+
+      <div class="title-actions">
+        <button id="start" class="primary">Play</button>
+        <button data-open-rules class="ghost">How to play</button>
+        <a class="ghost link" href="about.html">About this project</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== In-game HUD ===================== -->
+  <div id="hud" hidden>
+    <header class="topbar">
+      <div class="topbar-left">
+        <span id="round" class="pill">Round 1</span>
+        <span id="counts" class="pill muted"></span>
+        <span id="seed" class="pill muted small"></span>
+      </div>
+      <div id="status">
+        <strong id="status-main">Your turn</strong>
+        <span id="status-sub"></span>
+      </div>
+      <div class="topbar-right">
+        <button id="overview" class="icon" title="Overview of the table">🗺</button>
+        <button data-open-rules class="icon" title="Rules">?</button>
+        <button id="sound" class="icon" title="Sound">🔊</button>
+        <button id="menu" class="icon" title="Back to menu">☰</button>
+      </div>
+    </header>
+
+    <aside id="players"></aside>
+
+    <div id="legend" title="Tile colours in this set"></div>
+
+    <button id="cancel" class="ghost floating" hidden>Cancel selection (Esc)</button>
+
+    <footer id="log" class="collapsed">
+      <button id="log-toggle">Game log</button>
+      <ol id="log-list"></ol>
+    </footer>
+  </div>
+
+  <!-- ===================== Rules ===================== -->
+  <div id="rules" class="modal" hidden>
+    <div class="modal-card">
+      <button class="close" data-close aria-label="Close">×</button>
+      <h2>How to play</h2>
+      <ol class="rules-list">
+        <li><strong>Draft.</strong> On your turn, pick one colour from a factory (you take <em>all</em> tiles of that colour there; the rest slide to the centre) or from the centre pile.</li>
+        <li><strong>Place.</strong> Put the tiles on one pattern line on the left of your board. A line holds a single colour and must not already have that colour on the wall in the same row. Tiles that do not fit fall to the floor line.</li>
+        <li><strong>First player.</strong> The first person to take from the centre also takes the <b>1</b> marker: it costs a floor spot but you start the next round.</li>
+        <li><strong>Wall tiling.</strong> When every factory and the centre are empty, each <em>complete</em> pattern line moves its rightmost tile to the matching wall slot. Score 1 point, or the length of the horizontal and vertical runs it joins. Leftover tiles go to the lid.</li>
+        <li><strong>Floor.</strong> Floor tiles cost −1 −1 −2 −2 −2 −3 −3. Your score never drops below zero.</li>
+        <li><strong>Game end.</strong> After the round in which someone completes a horizontal wall row. Bonuses: +2 per complete row, +7 per complete column, +10 per colour with all five tiles placed.</li>
+      </ol>
+      <p class="muted">Controls: click tiles to pick a colour, then click a pattern line or the floor. Drag to orbit the table, scroll to zoom. Use the eye buttons to inspect opponents' boards.</p>
     </div>
   </div>
-</header>
 
-
-  <section>
-    <h2>Motivation:</h2>
-    <p>
-      The goal was to bring my favourite board game, Azul, to life, using a beautiful and interactive web-based experience.
-      I wanted to make something that was inspired by classic and limited edition versions of the game, like stained glass, chocolate and classic azul
-    </p>
-  </section>
-
-  <section>
-    <h2>How I did it:</h2>
-    <p>
-      Used Three.js to render a 3D board and tiles. User interaction was powered by
-      mouse event listeners and physics logic. Textures, lighting, as well as calming water backgrounds were carefully tuned to create a fun experience!<br>
-      1. Game board set-up, a flat box object added to scene with an image texture I found online (with increased contrast)<br>
-      2. Orbital controls added to move tiles on top of the board<br>
-      3. Factories around the board (cylindrical objects) with 4 randomly chosen tiles on each (box object)<br>
-      4. Water background added to move 1/60th per second to appear animated<br>
-      5. Ambient lighting added, light also added to the cursor that disables when we touch-drag a tile, and a point light inside the tiles to give them an extra "pop"<br>
-      6. Collision mechanics added so the tile does not fall through the board or factories if dropped, and so that tiles do not spawn on top of each other (no overlapping allowed)<br>
-      7. Tile textures - mosaic stained-glass (triangulated dual toned transparent), chocolate (bezier curved at edges, perlin noise for speckles), standard tiles with image texture
-    </p>
-  </section>
-
-  <section>
-    <h2>Future Work:</h2>
-    <p>
-      1. Ability to drop tiles into water with a splash<br>
-      2. Multiplayer gameplay using socket programming<br>
-      3. Custom soundtrack<br>
-      4. Able to "snap" tiles into the correct box on the game board, certain amount of gravity<br>
-      5. Night mode so we can see the point lights better<br>
-    </p>
-  </section>
-
-  <section>
-    <h2>Pretty pictures:</h2>
-    <div class="image-gallery">
-      <img src="project_pictures/all_factories.png" alt="Overview of scene">
-      <img src="project_pictures/board.png" alt="Game board">
-      <img src="project_pictures/side_view.png" alt="Stained-glass tile">
-      <img src="project_pictures/tiles_on_board.png" alt="Tile Placement">
-      <img src="project_pictures/tile_show.png" alt="Tile Show">
+  <!-- ===================== Game over ===================== -->
+  <div id="gameover" class="modal" hidden>
+    <div class="modal-card">
+      <div id="gameover-body"></div>
+      <div class="title-actions">
+        <button id="play-again" class="primary">Play again</button>
+        <button id="back-to-menu" class="ghost">Menu</button>
+      </div>
     </div>
-  </section>
+  </div>
 
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>
